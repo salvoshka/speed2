@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "express": "^5.1.0",
-    "speed-test": "^3.0.0"
+    "speed-test": "^3.0.0",
+    "fast-cli": "^4.0.0"
   }
 }
