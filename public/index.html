@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bestfiber Speedtest</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,21 +19,20 @@
       <div class="p-8 text-center">
         <!-- Gauges -->
         <div class="flex flex-col md:flex-row justify-center items-center gap-6 mb-8">
-  <div class="w-40 md:w-48">
-    <canvas id="downloadGauge"></canvas>
-  </div>
-  <div class="w-40 md:w-48">
-    <canvas id="uploadGauge"></canvas>
-  </div>
-</div>
-<!-- Progress Bar -->
-<div class="w-full max-w-md mx-auto mt-6"> <!-- Tambah mt-6 untuk jarak -->
-  <div class="w-full bg-gray-200 rounded-full h-2.5">
-    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
-  </div>
-</div>
+          <div class="w-40 md:w-48">
+            <canvas id="downloadGauge"></canvas>
+          </div>
+          <div class="w-40 md:w-48">
+            <canvas id="uploadGauge"></canvas>
+          </div>
+        </div>
 
-
+        <!-- Progress Bar -->
+        <div class="w-full max-w-md mx-auto mt-6">
+          <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+          </div>
+        </div>
 
         <!-- Button -->
         <button id="startTestBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full text-lg mt-6">
@@ -102,62 +101,60 @@
     }
 
     async function runSpeedTest() {
-  const btn = document.getElementById('startTestBtn');
-  const status = document.getElementById('status');
-  const progressBarEl = document.getElementById('progress-bar');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Proses...';
-  status.textContent = 'Proses Tes Kecepatan...';
-  progressBarEl.style.width = '0%';
+      const btn = document.getElementById('startTestBtn');
+      const status = document.getElementById('status');
+      const progressBarEl = document.getElementById('progress-bar');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Proses...';
+      status.textContent = 'Proses Tes Kecepatan...';
+      progressBarEl.style.width = '0%';
 
-  let downloadProgress = 0;
-  let uploadProgress = 0;
+      let downloadProgress = 0;
+      let uploadProgress = 0;
 
-  const startTime = Date.now();
-  const maxDuration = 40000; // estimasi 10 detik untuk fetch
-  let animationFrame;
+      const startTime = Date.now();
+      const maxDuration = 40000; // estimasi 10 detik untuk fetch
+      let animationFrame;
 
-  const animateGauge = () => {
-    const elapsed = Date.now() - startTime;
-    const progressPercent = Math.min((elapsed / maxDuration) * 100, 100);
-    progressBarEl.style.width = `${progressPercent}%`;
+      const animateGauge = () => {
+        const elapsed = Date.now() - startTime;
+        const progressPercent = Math.min((elapsed / maxDuration) * 100, 100);
+        progressBarEl.style.width = `${progressPercent}%`;
 
-    // Gauge simulation progress
-    if (downloadProgress < 90) {
-      downloadProgress = Math.min(90, (elapsed / maxDuration) * 90);
-      updateGauge(downloadChart, downloadProgress);
+        // Gauge simulation progress
+        if (downloadProgress < 90) {
+          downloadProgress = Math.min(90, (elapsed / maxDuration) * 90);
+          updateGauge(downloadChart, downloadProgress);
+        }
+        if (uploadProgress < 45) {
+          uploadProgress = Math.min(45, (elapsed / maxDuration) * 45);
+          updateGauge(uploadChart, uploadProgress);
+        }
+
+        animationFrame = requestAnimationFrame(animateGauge);
+      };
+      animationFrame = requestAnimationFrame(animateGauge);
+
+      try {
+        const response = await fetch('/test');
+        const result = await response.json();
+
+        cancelAnimationFrame(animationFrame);
+
+        // Set 100% progress
+        progressBarEl.style.width = '100%';
+        updateGauge(downloadChart, result.downloadSpeed);
+        updateGauge(uploadChart, result.uploadSpeed);
+        status.textContent = 'Tes selesai!';
+      } catch (err) {
+        cancelAnimationFrame(animationFrame);
+        status.textContent = 'Tes gagal.';
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-bolt mr-2"></i> Mulai Tes Kecepatan';
+      }
     }
-    if (uploadProgress < 45) {
-      uploadProgress = Math.min(45, (elapsed / maxDuration) * 45);
-      updateGauge(uploadChart, uploadProgress);
-    }
-
-    animationFrame = requestAnimationFrame(animateGauge);
-  };
-  animationFrame = requestAnimationFrame(animateGauge);
-
-  try {
-    const response = await fetch('/test');
-    const result = await response.json();
-
-    cancelAnimationFrame(animationFrame);
-
-    // Set 100% progress
-    progressBarEl.style.width = '100%';
-    updateGauge(downloadChart, result.downloadSpeed);
-    updateGauge(uploadChart, result.uploadSpeed);
-    status.textContent = 'Tes selesai!';
-  } catch (err) {
-    cancelAnimationFrame(animationFrame);
-    status.textContent = 'Tes gagal.';
-    console.error(err);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-bolt mr-2"></i> Mulai Tes Kecepatan';
-  }
-}
-
-
 
     document.addEventListener('DOMContentLoaded', () => {
       const downloadCtx = document.getElementById('downloadGauge').getContext('2d');
